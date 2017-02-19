@@ -1,11 +1,11 @@
 /**
- *  Foscam Universal Device
+ *  RGBWW LED Controller
  *
- *  Copyright 2014 skp19
+ *  Copyright 2017 Ph4r
  *
  */
 metadata {
-	definition (name: "WiFi 370 LED Strip Controller", namespace: "Ledridge", author: "Ledridge") {
+	definition (name: "WiFi 370 LED Strip Controller", namespace: "Ph4r", author: "Ph4r") {
 		capability "Switch Level"
 		capability "Actuator"
 		capability "Color Control"
@@ -75,13 +75,57 @@ def parse(description) {
 
 // handle commands
 def on() {
-	parent.on(this)
 	sendEvent(name: "switch", value: "on")
+    sendPower(true)
 }
 
 def off() {
-	parent.off(this)
 	sendEvent(name: "switch", value: "off")
+    sendPower(false)
+}
+
+def sendPower(state) {
+	byte[] bytes = [0x71, 0x24, 0x0F, 0xA4]
+    if (state) { // 71 23 0f a3 on
+    	bytes = [0x71, 0x23, 0x0F, 0xA3]
+    } else {	 //71 24 0f a4 off
+    	bytes = [0x71, 0x24, 0x0F, 0xA4]
+	}
+    String body = bytes.encodeHex()
+    String sData = new String(bytes, "ISO-8859-1");
+    byte[] bytes2 = [0xA4]
+    String sData2 = new String(bytes2, "ISO-8859-1");
+    String pure = "\u7123\u0FA4"
+    log.debug "${sData}:${sData2}:${pure}:${body}"
+    //sendHubCommand(new physicalgraph.device.HubAction(sData, physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"
+    //sendHubCommand(new physicalgraph.device.HubAction(sData2, physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"
+    //sendHubCommand(new physicalgraph.device.HubAction(pure, physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"
+    sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"
+    
+}
+
+def sendChange(state) {
+	byte[] byteHeader = [0x31]
+    byte[] byteFooter = [0x00, 0x00, 0xF0, 0x0F]
+    
+    String bodyHeader = byteHeader.encodeHex()
+    String bodyFooter = byteFooter.encodeHex()
+    String bodyMain = bodyHeader + state.reverse().take(6).reverse() + bodyFooter
+    
+    def byteMain = bodyMain.decodeHex()
+    def checksum = 0
+    
+    byteMain.each {
+    	checksum += it;
+    }
+    checksum = checksum & 0xFF
+    String checksumHex = Integer.toHexString(checksum)
+    //log.debug "${checksum}:${checksumHex}"
+    
+    String body = bodyMain + checksumHex
+    
+    sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"
+    
 }
 
 def nextLevel() {
@@ -97,7 +141,7 @@ def nextLevel() {
 
 def setLevel(percent) {
 	log.debug "Executing 'setLevel'"
-	parent.setLevel(this, percent)
+	//parent.setLevel(this, percent)
 	sendEvent(name: "level", value: percent)
 }
 
@@ -115,7 +159,8 @@ def setHue(percent) {
 
 def setColor(value) {
 	log.debug "setColor: ${value}, $this"
-	parent.setColor(this, value)
+    sendChange(value.hex)
+	//parent.setColor(this, value)
 	if (value.hue) { sendEvent(name: "hue", value: value.hue)}
 	if (value.saturation) { sendEvent(name: "saturation", value: value.saturation)}
 	if (value.hex) { sendEvent(name: "color", value: value.hex)}
@@ -154,250 +199,6 @@ def adjustOutgoingHue(percent) {
 	}
 	log.info "percent: $percent, adjusted: $adjusted"
 	adjusted
-}
-
-
-
-//TAKE PICTURE
-def take() {
-	log.debug("Taking Photo")
-	sendEvent(name: "hubactionMode", value: "s3");
-    if(hdcamera == "true") {
-		hubGet("cmd=snapPicture2")
-    }
-    else {
-    	hubGet("/snapshot.cgi?")
-    }
-}
-//END TAKE PICTURE
-
-//ALARM ACTIONS
-def toggleAlarm() {
-	log.debug "Toggling Alarm"
-	if(device.currentValue("alarmStatus") == "on") {
-    	alarmOff()
-  	}
-	else {
-    	alarmOn()
-	}
-}
-
-def alarmOn() {
-	log.debug "Enabling Alarm"
-    sendEvent(name: "alarmStatus", value: "on");
-    if(hdcamera == "true") {
-		hubGet("cmd=setMotionDetectConfig&isEnable=1")
-    }
-    else {
-    	hubGet("/set_alarm.cgi?motion_armed=1&")
-    }
-}
-
-def alarmOff() {
-	log.debug "Disabling Alarm"
-    sendEvent(name: "alarmStatus", value: "off");
-    if(hdcamera == "true") {
-		hubGet("cmd=setMotionDetectConfig&isEnable=0")
-    }
-    else {
-    	hubGet("/set_alarm.cgi?motion_armed=0&")
-    }
-}
-//END ALARM ACTIONS
-
-//LED ACTIONS
-//Toggle LED's
-def toggleLED() {
-  log.debug("Toggle LED")
-
-  if(device.currentValue("ledStatus") == "auto") {
-    ledOn()
-  }
-
-  else if(device.currentValue("ledStatus") == "on") {
-    ledOff()
-  }
-  
-  else {
-    ledAuto()
-  }
-}
-
-def ledOn() {
-    log.debug("LED changed to: on")
-    sendEvent(name: "ledStatus", value: "on");
-    if(hdcamera == "true") {
-	    delayBetween([hubGet("cmd=setInfraLedConfig&mode=1"), hubGet("cmd=openInfraLed")])
-    }
-    else {
-    	hubGet("/decoder_control.cgi?command=95&")
-    }
-}
-
-def ledOff() {
-    log.debug("LED changed to: off")
-    sendEvent(name: "ledStatus", value: "off");
-    if(hdcamera == "true") {
-    	delayBetween([hubGet("cmd=setInfraLedConfig&mode=1"), hubGet("cmd=closeInfraLed")])
-    }
-    else {
-    	hubGet("/decoder_control.cgi?command=94&")
-    }
-}
-
-def ledAuto() {
-    log.debug("LED changed to: auto")
-    sendEvent(name: "ledStatus", value: "auto");
-	if(hdcamera == "true") {
-		hubGet("cmd=setInfraLedConfig&mode=0")
-    }
-    else {
-    	hubGet("/decoder_control.cgi?command=95&")
-    }
-}
-//END LED ACTIONS
-
-//PRESET ACTIONS
-def preset1() {
-	log.debug("Preset 1 Selected - ${preset1}")
-	if(hdcamera == "true") {
-		hubGet("cmd=ptzGotoPresetPoint&name=${preset1}")
-    }
-    else {
-    	hubGet("/decoder_control.cgi?command=31&")
-    }
-}
-
-def preset2() {
-	log.debug("Preset 2 Selected - ${preset2}")
-	if(hdcamera == "true") {
-		hubGet("cmd=ptzGotoPresetPoint&name=${preset2}")
-    }
-    else {
-    	hubGet("/decoder_control.cgi?command=33&")
-    }
-}
-
-def preset3() {
-	log.debug("Preset 3 Selected - ${preset3}")
-	if(hdcamera == "true") {
-		hubGet("cmd=ptzGotoPresetPoint&name=${preset3}")
-    }
-    else {
-    	hubGet("/decoder_control.cgi?command=35&")
-    }
-}
-//END PRESET ACTIONS
-
-//CRUISE ACTIONS
-def cruisemap1() {
-	log.debug("Cruise Map 1 Selected - ${cruisemap1}")
-	if(hdcamera == "true") {
-		hubGet("cmd=ptzStartCruise&mapName=${cruisemap1}")
-    }
-    else {
-    	hubGet("/decoder_control.cgi?command=28&")
-    }
-}
-
-def cruisemap2() {
-	log.debug("Cruise Map 2 Selected - ${cruisemap2}")
-	if(hdcamera == "true") {
-		hubGet("cmd=ptzStartCruise&mapName=${cruisemap2}")
-    }
-    else {
-    	hubGet("/decoder_control.cgi?command=26&")
-    }
-}
-
-def stopCruise() {
-	log.debug("Stop Cruise")
-	if(hdcamera == "true") {
-		hubGet("cmd=ptzStopRun")
-    }
-    else {
-    	delayBetween([hubGet("/decoder_control.cgi?command=29&"), hubGet("/decoder_control.cgi?command=27&")])
-    }
-}
-//END CRUISE ACTIONS
-
-//PTZ CONTROLS
-def left() {
-	if(hdcamera == "true") {
-		delayBetween([hubGet("cmd=ptzMoveLeft"), hubGet("cmd=ptzStopRun")])
-    }
-    else {
-    	if(mirror == "true") {
-	    	hubGet("/decoder_control.cgi?command=4&onestep=1&")
-        }
-        else {
-        	hubGet("/decoder_control.cgi?command=6&onestep=1&")
-        }
-    }
-}
-
-def right() {
-	if(hdcamera == "true") {
-		delayBetween([hubGet("cmd=ptzMoveRight"), hubGet("cmd=ptzStopRun")])
-    }
-    else {
-    	if(mirror == "true") {
-	    	hubGet("/decoder_control.cgi?command=6&onestep=1&")
-        }
-        else {
-        	hubGet("/decoder_control.cgi?command=4&onestep=1&")
-        }
-    }
-}
-
-def up() {
-	if(hdcamera == "true") {
-        delayBetween([hubGet("cmd=ptzMoveUp"), hubGet("cmd=ptzStopRun")])
-    }
-    else {
-    	if(flip == "true") {
-	    	hubGet("/decoder_control.cgi?command=2&onestep=1&")
-        }
-        else {
-        	hubGet("/decoder_control.cgi?command=0&onestep=1&")
-        }
-    }
-}
-
-def down() {
-	if(hdcamera == "true") {
-        delayBetween([hubGet("cmd=ptzMoveDown"), hubGet("cmd=ptzStopRun")])
-    }
-    else {
-    	if(flip == "true") {
-    		hubGet("/decoder_control.cgi?command=0&onestep=1&")
-        }
-        else {
-        	hubGet("/decoder_control.cgi?command=2&onestep=1&")
-        }
-    }
-}
-//END PTZ CONTROLS
-
-def poll() {
-
-	sendEvent(name: "hubactionMode", value: "local");
-    //Poll Motion Alarm Status and IR LED Mode
-    if(hdcamera == "true") {
-		delayBetween([hubGet("cmd=getMotionDetectConfig"), hubGet("cmd=getInfraLedConfig")])
-    }
-    else {
-    	hubGet("/get_params.cgi?")
-    }
-}
-
-private getLogin() {
-	if(hdcamera == "true") {
-    	return "usr=${username}&pwd=${password}&"
-    }
-    else {
-    	return "user=${username}&pwd=${password}"
-    }
 }
 
 private hubGet(def apiCommand) {
@@ -489,34 +290,6 @@ def parseDescriptionAsMap(description) {
 		def nameAndValue = param.split(":")
 		map += [(nameAndValue[0].trim()):nameAndValue[1].trim()]
 	}
-}
-
-def putImageInS3(map) {
-
-	def s3ObjectContent
-
-	try {
-		def imageBytes = getS3Object(map.bucket, map.key + ".jpg")
-
-		if(imageBytes)
-		{
-			s3ObjectContent = imageBytes.getObjectContent()
-			def bytes = new ByteArrayInputStream(s3ObjectContent.bytes)
-			storeImage(getPictureName(), bytes)
-		}
-	}
-	catch(Exception e) {
-		log.error e
-	}
-	finally {
-		//Explicitly close the stream
-		if (s3ObjectContent) { s3ObjectContent.close() }
-	}
-}
-
-private getPictureName() {
-  def pictureUuid = java.util.UUID.randomUUID().toString().replaceAll('-', '')
-  "image" + "_$pictureUuid" + ".jpg"
 }
 
 private getHostAddress() {
