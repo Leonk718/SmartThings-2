@@ -54,7 +54,7 @@ preferences {
 	}
 
 	main(["switch"])
-	details(["switch", "levelSliderControl", "rgbSelector", "refresh"])
+	details(["switch", "rgbSelector", "refresh"])
 
 }
 
