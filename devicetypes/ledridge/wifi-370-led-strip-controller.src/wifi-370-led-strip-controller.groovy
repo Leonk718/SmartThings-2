@@ -30,6 +30,16 @@ metadata {
         command "yellow"
         command "white"
         command "setWhiteLevel"
+        command "setSpeed"
+        command "Fade7"
+        command "Strobe7"
+        command "Jump7"
+        command "FadeRed"
+        command "StrobeRed"
+        command "FadeGreen"
+        command "StrobeGreen"
+        command "FadeBlue"
+        command "StrobeBlue"
      }
     
      tiles(scale: 2)  {
@@ -106,13 +116,23 @@ metadata {
             state "offsoftwhite", label:"soft white", action:"softwhite", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "onsoftwhite", label:"soft white", action:"softwhite", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFF1E0"
         }
+        /*
         standardTile("daylight", "device.daylight", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
             state "offdaylight", label:"daylight", action:"daylight", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "ondaylight", label:"daylight", action:"daylight", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFB"
         }
+        */
         standardTile("warmwhite", "device.warmwhite", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
             state "offwarmwhite", label:"warm white", action:"warmwhite", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "onwarmwhite", label:"warm white", action:"warmwhite", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFF4E5"
+        }
+        standardTile("yellow", "device.yellow", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offyellow", label:"yellow", action:"yellow", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onyellow", label:"yellow", action:"yellow", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFF00"
+        }
+        standardTile("magenta", "device.magenta", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offmagenta", label:"magenta", action:"magenta", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onmagenta", label:"magenta", action:"magenta", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FF00FF"
         }
         standardTile("green", "device.green", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
             state "offgreen", label:"green", action:"green", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
@@ -121,10 +141,6 @@ metadata {
         standardTile("blue", "device.blue", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
             state "offblue", label:"blue", action:"blue", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "onblue", label:"blue", action:"blue", icon:"st.illuminance.illuminance.bright", backgroundColor:"#0000FF"
-        }
-        standardTile("magenta", "device.magenta", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
-            state "offmagenta", label:"magenta", action:"magenta", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
-            state "onmagenta", label:"magenta", action:"magenta", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FF00FF"
         }
         standardTile("cyan", "device.cyan", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
             state "offcyan", label:"cyan", action:"cyan", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
@@ -138,9 +154,47 @@ metadata {
             state "offpurple", label:"purple", action:"purple", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "onpurple", label:"purple", action:"purple", icon:"st.illuminance.illuminance.bright", backgroundColor:"#BF00FF"
         }
-        standardTile("yellow", "device.yellow", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
-            state "offyellow", label:"yellow", action:"yellow", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
-            state "onyellow", label:"yellow", action:"yellow", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFF00"
+        controlTile("speedSliderControl", "device.speed", "slider", height: 1, width: 4, range:"(1..100)", inactiveLabel: false) {
+            state "speed", label:'Speed', action:"setSpeed"
+        }
+        valueTile("speed", "device.speed", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
+            state "speed", label: 'Speed\n${currentValue}'
+        }
+        standardTile("Fade7", "device.Fade7", height: 1, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offFade7", label:"Fade7", action:"Fade7", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onFade7", label:"Fade7", action:"Fade7", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("Strobe7", "device.Strobe7", height: 1, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offStrobe7", label:"Strobe7", action:"Strobe7", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onStrobe7", label:"Strobe7", action:"Strobe7", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("Jump7", "device.Jump7", height: 1, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offJump7", label:"Jump7", action:"Jump7", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onJump7", label:"Jump7", action:"Jump7", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("FadeRed", "device.FadeRed", height: 1, width: 1, inactiveLabel: false, canChangeIcon: false) {
+            state "offFadeRed", label:"FadeRed", action:"FadeRed", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onFadeRed", label:"FadeRed", action:"FadeRed", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("StrobeRed", "device.StrobeRed", height: 1, width: 1, inactiveLabel: false, canChangeIcon: false) {
+            state "offStrobeRed", label:"StrobeRed", action:"StrobeRed", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onStrobeRed", label:"StrobeRed", action:"StrobeRed", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("FadeGreen", "device.FadeGreen", height: 1, width: 1, inactiveLabel: false, canChangeIcon: false) {
+            state "offFadeGreen", label:"FadeGreen", action:"FadeGreen", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onFadeGreen", label:"FadeGreen", action:"FadeGreen", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("StrobeGreen", "device.StrobeGreen", height: 1, width: 1, inactiveLabel: false, canChangeIcon: false) {
+            state "offStrobeGreen", label:"StrobeGreen", action:"StrobeGreen", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onStrobeGreen", label:"StrobeGreen", action:"StrobeGreen", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("FadeBlue", "device.FadeBlue", height: 1, width: 1, inactiveLabel: false, canChangeIcon: false) {
+            state "offFadeBlue", label:"FadeBlue", action:"FadeBlue", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onFadeBlue", label:"FadeBlue", action:"FadeBlue", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("StrobeBlue", "device.StrobeBlue", height: 1, width: 1, inactiveLabel: false, canChangeIcon: false) {
+            state "offStrobeBlue", label:"StrobeBlue", action:"StrobeBlue", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onStrobeBlue", label:"StrobeBlue", action:"StrobeBlue", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
         }
 
         main(["switch"])
@@ -670,14 +724,19 @@ def doColorButton(colorName) {
 
     toggleTiles(colorName.toLowerCase().replaceAll("\\s",""))
     
-    def c = getColorData(colorName)
-    setColor(c)
+    if (colorName.take(1) == "a") {
+    	doAnimations (colorName.substring(1))
+	}
+	else {
+        def c = getColorData(colorName)
+        setColor(c)
+    }
 }
 
 def toggleTiles(color) {
 	state.colorTiles = []
 	if ( !state.colorTiles ) {
-    	state.colorTiles = ["softwhite","daylight","warmwhite","red","green","blue","cyan","magenta","orange","purple","yellow","white"]
+    	state.colorTiles = ["softwhite","daylight","warmwhite","red","green","blue","cyan","magenta","orange","purple","yellow","white","Fade7","Strobe7","Jump7","FadeRed","StrobeRed","FadeGreen","StrobeGreen","FadeBlue","StrobeBlue"]
     }
     
     def cmds = []
@@ -694,6 +753,92 @@ def toggleTiles(color) {
     })
     
     delayBetween(cmds, 2500)
+}
+
+def setSpeed(level) {
+	log.trace "setSpeed($level)"
+    
+    sendEvent(name: "speed", value: level)
+}
+
+def doAnimations(animation) {
+	log.trace "doAnimations($animation)"
+    def hosthex = convertIPtoHex(ip);
+    def porthex = convertPortToHex(port);
+    def target = "$hosthex:$porthex";
+    device.deviceNetworkId = target;
+    
+	byte[] byteHeader = [0x61]
+    //byte[] byteFooter = [0x10, 0x0F]  // 0x10 byte to be replaced with speed eventually (10=50%, 01=100%, 1c=10%, 06=80%) 
+    byte[] byteFooter = [0x0F]  // 0x10 byte to be replaced with speed eventually (10=50%, 01=100%, 1c=10%, 06=80%) 
+    byte[] commandSpeed= [0x10] 
+    log.debug "00"
+    def speed = device.latestValue("speed").toInteger()
+    log.debug "01"
+    if (speed > 0) {
+    	 log.debug "A0"
+    	def var1 = (speed-100)
+         log.debug "A1"
+    	def var2 = var1 * (-1f/3f)
+         log.debug "A2"
+    	def var3 = (Math.round(var2)-1)
+         log.debug "A3"
+    	commandSpeed[0] = var3.abs()
+         log.debug "A4"
+    }
+    else {
+    	 log.debug "B0"
+    	commandSpeed[0] = 16
+    }
+    log.debug "C0"
+    String commandSpeedStr = commandSpeed.encodeHex()
+     log.debug "C1"
+    // speed guess in decimal: =ABS(ROUND((speed-100)*(-1f/3f),0)-1) 
+    
+    def animationFound = animationSwitch(animation)
+    String commandStr
+    if (animationFound?.command) { commandStr = animationFound.command } else { commandStr = '25' }
+    
+    log.debug "Animate ${animation}:${commandStr}@${speed}%=${commandSpeed[0]}:${commandSpeedStr}"
+    String bodyHeader = byteHeader.encodeHex()
+    String bodyFooter = byteFooter.encodeHex()
+    String bodyMain = bodyHeader + commandStr + commandSpeedStr + bodyFooter
+    
+    def byteMain = bodyMain.decodeHex()
+    def checksum = 0
+    
+    byteMain.each {
+    	checksum += it;
+    }
+    checksum = checksum & 0xFF
+    String checksumHex = Integer.toHexString(checksum)
+    
+    String body = bodyMain + checksumHex
+    
+    sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"
+    
+}
+
+def animationSwitch(val) {
+
+	final animations = [
+        [name:"Fade7",		command: '25'],
+        [name:"FadeRed",	command: '26'],
+        [name:"FadeGreen",	command: '27'],
+        [name:"FadeBlue",	command: '28'],
+        [name:"FadeWhite",	command: '2c'],
+        [name:"Strobe7",	command: '30'],
+        [name:"StrobeRed",	command: '31'],
+        [name:"StrobeGreen",command: '32'],
+        [name:"StrobeBlue",	command: '33'],
+        [name:"StrobeWhite",command: '37'],
+        [name:"Jump7",		command: '38'],
+	]
+    
+    def animationData = [:]    
+    animationData = animations.find { it.name == val }
+    
+    animationData
 }
 
 // rows of buttons
@@ -713,9 +858,18 @@ def purple()	{ doColorButton("Purple") }
 def yellow() 	{ doColorButton("Yellow") }
 def white() 	{ doColorButton("White") }
 
-def fireplace() { doColorButton("Fire Place") }
-def storm() 	{ doColorButton("Storm") }
-def deepfade() 	{ doColorButton("Deep Fade") }
+def Fade7() 	{ doColorButton("aFade7") }
+def Strobe7() 	{ doColorButton("aStrobe7") }
+def Jump7() 	{ doColorButton("aJump7") }
 
-def litefade() 	{ doColorButton("Lite Fade") }
-def police() 	{ doColorButton("Police") }
+def FadeRed() 		{ doColorButton("aFadeRed") }
+def StrobeRed() 	{ doColorButton("aStrobeRed") }
+
+def FadeGreen() 	{ doColorButton("aFadeGreen") }
+def StrobeGreen() 	{ doColorButton("aStrobeGreen") }
+
+def FadeBlue() 		{ doColorButton("aFadeBlue") }
+def StrobeBlue() 	{ doColorButton("aStrobeBlue") }
+
+def FadeWhite() 	{ doColorButton("aFadeWhite") }
+def StrobeWhite() 	{ doColorButton("aStrobeWhite") }
