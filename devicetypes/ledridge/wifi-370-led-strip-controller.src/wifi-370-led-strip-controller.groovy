@@ -772,27 +772,19 @@ def doAnimations(animation) {
     //byte[] byteFooter = [0x10, 0x0F]  // 0x10 byte to be replaced with speed eventually (10=50%, 01=100%, 1c=10%, 06=80%) 
     byte[] byteFooter = [0x0F]  // 0x10 byte to be replaced with speed eventually (10=50%, 01=100%, 1c=10%, 06=80%) 
     byte[] commandSpeed= [0x10] 
-    log.debug "00"
+    
     def speed = device.latestValue("speed").toInteger()
-    log.debug "01"
+    
     if (speed > 0) {
-    	 log.debug "A0"
     	def var1 = (speed-100)
-         log.debug "A1"
-    	def var2 = var1 * (-1f/3f)
-         log.debug "A2"
-    	def var3 = (Math.round(var2)-1)
-         log.debug "A3"
-    	commandSpeed[0] = var3.abs()
-         log.debug "A4"
+        def var2 = var1 * (-1f/3f)
+        def var3 = (Math.round(var2)-1)
+        commandSpeed[0] = var3.abs()
     }
     else {
-    	 log.debug "B0"
     	commandSpeed[0] = 16
     }
-    log.debug "C0"
     String commandSpeedStr = commandSpeed.encodeHex()
-     log.debug "C1"
     // speed guess in decimal: =ABS(ROUND((speed-100)*(-1f/3f),0)-1) 
     
     def animationFound = animationSwitch(animation)
