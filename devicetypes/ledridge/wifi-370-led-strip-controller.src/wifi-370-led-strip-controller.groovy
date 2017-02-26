@@ -13,49 +13,147 @@ metadata {
 		capability "Refresh"
 		capability "Sensor"
         
-		command "setAdjustedColor"
-		command "refresh"
-	}
+		command "setRed"
+        command "setGreen"
+        command "setBlue"
+        command "setAdjustedColor"
+        command "softwhite"
+        command "daylight"
+        command "warmwhite"
+        command "red"
+        command "green"
+        command "blue"
+        command "cyan"
+        command "magenta"
+        command "orange"
+        command "purple"
+        command "yellow"
+        command "white"
+        command "setWhiteLevel"
+     }
     
-preferences {
-	input("ip", "string", title:"Controller IP Address", description: "Controller IP Address", defaultValue: "192.168.1.69", required: true, displayDuringSetup: true)
-	input("port", "string", title:"Controller Port", description: "Controller Port", defaultValue: 5577 , required: true, displayDuringSetup: true)
-	input("username", "string", title:"Controller Username", description: "Controller Username", defaultValue: admin, required: true, displayDuringSetup: true)
-	input("password", "password", title:"Controller Password", description: "Controller Password", defaultValue: nimda, required: true, displayDuringSetup: true)
-	}
+     tiles(scale: 2)  {
 
-	standardTile("switch", "device.switch", width: 2, height: 2, canChangeIcon: true) {
-		state "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821"
-		state "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff"
-	}
-	standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat") {
-		state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
-	}
-	controlTile("rgbSelector", "device.color", "color", height: 3, width: 3, inactiveLabel: false) {
-		state "color", action:"setAdjustedColor"
-	}
-	controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 2, inactiveLabel: false, range:"(0..100)") {
-		state "level", action:"switch level.setLevel"
-	}
-	valueTile("level", "device.level", inactiveLabel: false, decoration: "flat") {
-		state "level", label: 'Level ${currentValue}%'
-	}
-	controlTile("saturationSliderControl", "device.saturation", "slider", height: 1, width: 2, inactiveLabel: false) {
-		state "saturation", action:"color control.setSaturation"
-	}
-	valueTile("saturation", "device.saturation", inactiveLabel: false, decoration: "flat") {
-		state "saturation", label: 'Sat ${currentValue}    '
-	}
-	controlTile("hueSliderControl", "device.hue", "slider", height: 1, width: 2, inactiveLabel: false) {
-		state "hue", action:"color control.setHue"
-	}
-	valueTile("hue", "device.hue", inactiveLabel: false, decoration: "flat") {
-		state "hue", label: 'Hue ${currentValue}   '
-	}
+        multiAttributeTile(name:"switch", type: "lighting", width: 6, height: 4, canChangeIcon: true) {
+			tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
+				attributeState "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
+				attributeState "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+				attributeState "turningOn", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
+				attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+			}
+			tileAttribute ("device.color", key: "SECONDARY_CONTROL") {
+				attributeState "color", label:'Color${currentValue}'
+			}
+            tileAttribute ("device.level", key: "SLIDER_CONTROL") {
+                attributeState "level", action:"switch level.setLevel"
+            }
+			tileAttribute ("device.color", key: "COLOR_CONTROL") {
+				attributeState "color", action:"setAdjustedColor"
+			}
+		}
+        /*
+        controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 4, inactiveLabel: false, range:"(0..100)") {
+            state "level", action:"switch level.setLevel"
+        }
+        */
+        controlTile("rlSliderControl", "device.rl", "slider", height: 1, width: 4, range:"(0..255)", inactiveLabel: false) {
+            state "rl", label:'Red', action:"setRed"
+        }
+        valueTile("rl", "device.rl", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
+            state "rl", label: 'RL\n${currentValue}'
+        }
+        controlTile("glSliderControl", "device.gl", "slider", height: 1, width: 4, range:"(0..255)", inactiveLabel: false) {
+            state "gl", action:"setGreen"
+        }
+        valueTile("gl", "device.gl", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
+            state "gl", label: 'GL\n${currentValue}'
+        }
+        controlTile("blSliderControl", "device.bl", "slider", height: 1, width: 4, range:"(0..255)", inactiveLabel: false) {
+            state "bl", action:"setBlue"
+        }
+        valueTile("bl", "device.bl", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
+            state "bl", label: 'BL\n${currentValue}'
+        }
+        /*
+        valueTile("level", "device.level", height: 2, width: 3, inactiveLabel: false, decoration: "flat") {
+            state "level", label: 'Level\n${currentValue}%'
+        }
+        controlTile("saturationSliderControl", "device.saturation", "slider", height: 1, width: 4, inactiveLabel: false) {
+            state "saturation", action:"color control.setSaturation"
+        }
+        valueTile("saturation", "device.saturation", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
+            state "saturation", label: 'Sat ${currentValue}%'
+        }
+        controlTile("hueSliderControl", "device.hue", "slider", height: 1, width: 4, inactiveLabel: false) {
+            state "hue", action:"color control.setHue"
+        }
+        valueTile("hue", "device.hue", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
+            state "hue", label: 'Hue ${currentValue}%'
+        }
+        */
+        controlTile("rgbSelector", "device.color", "color", height: 4, width: 4, inactiveLabel: false) {
+            state "color", action:"setAdjustedColor"
+		}
+        standardTile("white", "device.white", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offwhite", label:"White", action:"white", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onwhite", label:"White", action:"white", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("red", "device.red", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offred", label:"red", action:"red", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onred", label:"red", action:"red", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FF0000"
+        }
+		standardTile("softwhite", "device.softwhite", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offsoftwhite", label:"soft white", action:"softwhite", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onsoftwhite", label:"soft white", action:"softwhite", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFF1E0"
+        }
+        standardTile("daylight", "device.daylight", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offdaylight", label:"daylight", action:"daylight", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "ondaylight", label:"daylight", action:"daylight", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFB"
+        }
+        standardTile("warmwhite", "device.warmwhite", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offwarmwhite", label:"warm white", action:"warmwhite", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onwarmwhite", label:"warm white", action:"warmwhite", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFF4E5"
+        }
+        standardTile("green", "device.green", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offgreen", label:"green", action:"green", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "ongreen", label:"green", action:"green", icon:"st.illuminance.illuminance.bright", backgroundColor:"#00FF00"
+        }
+        standardTile("blue", "device.blue", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offblue", label:"blue", action:"blue", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onblue", label:"blue", action:"blue", icon:"st.illuminance.illuminance.bright", backgroundColor:"#0000FF"
+        }
+        standardTile("magenta", "device.magenta", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offmagenta", label:"magenta", action:"magenta", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onmagenta", label:"magenta", action:"magenta", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FF00FF"
+        }
+        standardTile("cyan", "device.cyan", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offcyan", label:"cyan", action:"cyan", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "oncyan", label:"cyan", action:"cyan", icon:"st.illuminance.illuminance.bright", backgroundColor:"#00FFFF"
+        }
+        standardTile("orange", "device.orange", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offorange", label:"orange", action:"orange", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onorange", label:"orange", action:"orange", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FF6600"
+        }
+        standardTile("purple", "device.purple", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offpurple", label:"purple", action:"purple", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onpurple", label:"purple", action:"purple", icon:"st.illuminance.illuminance.bright", backgroundColor:"#BF00FF"
+        }
+        standardTile("yellow", "device.yellow", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offyellow", label:"yellow", action:"yellow", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onyellow", label:"yellow", action:"yellow", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFF00"
+        }
 
-	main(["switch"])
-	details(["switch", "rgbSelector", "refresh"])
+        main(["switch"])
+        //details(["switch", "rgbSelector"])
 
+    }
+    
+    preferences {
+        input("ip", "string", title:"Controller IP Address", description: "Controller IP Address", defaultValue: "192.168.1.69", required: true, displayDuringSetup: true)
+        input("port", "string", title:"Controller Port", description: "Controller Port", defaultValue: 5577 , required: true, displayDuringSetup: true)
+        input("username", "string", title:"Controller Username", description: "Controller Username", defaultValue: admin, required: true, displayDuringSetup: true)
+        input("password", "password", title:"Controller Password", description: "Controller Password", defaultValue: nimda, required: true, displayDuringSetup: true)
+    }
 }
 
 // parse events into attributes
@@ -64,7 +162,7 @@ def parse(description) {
 	def results = []
 	def map = description
 	if (description instanceof String)  {
-		log.debug "Hue Bulb stringToMap - ${map}"
+		log.debug "WiFi 370 LED Strip stringToMap - ${map}"
 		map = stringToMap(description)
 	}
 	if (map?.name && map?.value) {
@@ -84,8 +182,29 @@ def off() {
     sendPower(false)
 }
 
+def sendPower2(state) {
+    def hosthex = convertIPtoHex(ip);
+    def porthex = convertPortToHex(port);
+    def target = "$hosthex:$porthex";
+    device.deviceNetworkId = target;
+    
+    //byte[] body = buildTLSClientHello();
+    byte[] body = [0x71, 0x24, 0x0F, 0xA4]
+
+    log.debug "${body.length} ${bytesToHex(body)}";
+    String strBody = new String(body, "ISO-8859-1");
+
+    sendHubCommand(new physicalgraph.device.HubAction(strBody, physicalgraph.device.Protocol.LAN, getDataValue("mac")));
+}
+
+
 def sendPower(state) {
-	byte[] bytes = [0x71, 0x24, 0x0F, 0xA4]
+	def hosthex = convertIPtoHex(ip);
+    def porthex = convertPortToHex(port);
+    def target = "$hosthex:$porthex";
+    device.deviceNetworkId = target;
+    
+    byte[] bytes = [0x71, 0x24, 0x0F, 0xA4]
     if (state) { // 71 23 0f a3 on
     	bytes = [0x71, 0x23, 0x0F, 0xA3]
     } else {	 //71 24 0f a4 off
@@ -104,13 +223,24 @@ def sendPower(state) {
     
 }
 
-def sendChange(state) {
+def sendRGB(redHex, greenHex, blueHex) {
+	def hosthex = convertIPtoHex(ip);
+    def porthex = convertPortToHex(port);
+    def target = "$hosthex:$porthex";
+    device.deviceNetworkId = target;
+    
 	byte[] byteHeader = [0x31]
     byte[] byteFooter = [0x00, 0x00, 0xF0, 0x0F]
     
+    log.debug "${redHex}:${greenHex}:${blueHex}"
+    if (!redHex && !greenHex && !blueHex) { return }
+    if (!redHex) { redHex = "00" }
+    if (!greenHex) { greenHex = "00" }
+    if (!blueHex) { blueHex = "00" }
+    
     String bodyHeader = byteHeader.encodeHex()
     String bodyFooter = byteFooter.encodeHex()
-    String bodyMain = bodyHeader + state.reverse().take(6).reverse() + bodyFooter
+    String bodyMain = bodyHeader + redHex + greenHex + blueHex + bodyFooter
     
     def byteMain = bodyMain.decodeHex()
     def checksum = 0
@@ -128,77 +258,169 @@ def sendChange(state) {
     
 }
 
-def nextLevel() {
-	def level = device.latestValue("level") as Integer ?: 0
-	if (level <= 100) {
-		level = Math.min(25 * (Math.round(level / 25) + 1), 100) as Integer
-	}
-	else {
-		level = 25
-	}
-	setLevel(level)
+def setLevel(level) {
+	log.trace "setLevel($level)"
+    
+	if (level == 0) { off() }
+	else if (device.latestValue("switch") == "off") { on() }
+    
+    def colorMap = [hex: device.latestValue("color"), level: level]
+	setColor(colorMap)
 }
 
-def setLevel(percent) {
-	log.debug "Executing 'setLevel'"
-	//parent.setLevel(this, percent)
-	sendEvent(name: "level", value: percent)
+def setRed(level) {
+	log.trace "setRed($level)"
+    
+    def changed = hex(level)
+    def hex = device.latestValue("color")
+    def hexColor = hex.take(1) + changed + hex.substring(3)
+    
+	def colorMap = [hex: hexColor]
+	setColor(colorMap)
+}
+
+def setGreen(level) {
+	log.trace "setGreen($level)"
+    
+    def changed = hex(level)
+    def hex = device.latestValue("color")
+    def hexColor = hex.take(3) + changed + hex.substring(5)
+    
+	def colorMap = [hex: hexColor]
+	setColor(colorMap)
+}
+
+def setBlue(level) {
+	log.trace "setBlue($level)"
+    
+    def changed = hex(level)
+    def hex = device.latestValue("color")
+    def hexColor = hex.take(5) + changed
+    
+	def colorMap = [hex: hexColor]
+	setColor(colorMap)
 }
 
 def setSaturation(percent) {
 	log.debug "Executing 'setSaturation'"
-	parent.setSaturation(this, percent)
 	sendEvent(name: "saturation", value: percent)
+    def colorMap = [hue: device.latestValue("hue") as Integer, saturation: device.latestValue("saturation") as Integer]
+	setColor(colorMap)
 }
 
 def setHue(percent) {
 	log.debug "Executing 'setHue'"
-	parent.setHue(this, percent)
 	sendEvent(name: "hue", value: percent)
+    def colorMap = [hue: device.latestValue("hue") as Integer, saturation: device.latestValue("saturation") as Integer]
+	setColor(colorMap)
 }
 
 def setColor(value) {
-	log.debug "setColor: ${value}, $this"
-    sendChange(value.hex)
-	//parent.setColor(this, value)
-	if (value.hue) { sendEvent(name: "hue", value: value.hue)}
-	if (value.saturation) { sendEvent(name: "saturation", value: value.saturation)}
-	if (value.hex) { sendEvent(name: "color", value: value.hex)}
-	if (value.level) { sendEvent(name: "level", value: value.level)}
-	if (value.switch) { sendEvent(name: "switch", value: value.switch)}
+	log.debug "setColor: ${value}"
+    
+    if (value.size() < 8)
+    	toggleTiles("off")
+
+    if (( value.size() == 2) && (value.hue != null) && (value.saturation != null)) { //assuming we're being called from outside of device (App)
+    	def rgb = hslToRGB(value.hue, value.saturation, 1.0)
+        def level = device.latestValue("level")
+        value.hex = rgbToHex(rgb)
+        value.rh = hex(rgb.r * level/100)
+        value.gh = hex(rgb.g * level/100)
+        value.bh = hex(rgb.b * level/100)
+    }
+    
+    if ((value.size() == 3) && (value.hue != null) && (value.saturation != null) && (value.level)) { //user passed in a level value too from outside (App)
+    	def rgb = hslToRGB(value.hue, value.saturation, 1.0)
+        sendEvent(name: "level", value: value.level)
+        value.hex = rgbToHex(rgb)
+        value.rh = hex(rgb.r * value.level/100)
+        value.gh = hex(rgb.g * value.level/100)
+        value.bh = hex(rgb.b * value.level/100)       
+    }
+    
+    if (( value.size() == 1) && (value.hex)) { //being called from outside of device (App) with only hex
+		def rgbInt = hexToRgb(value.hex)
+        def level = device.latestValue("level")
+        value.rh = hex(rgbInt.r * level/100)
+        value.gh = hex(rgbInt.g * level/100)
+        value.bh = hex(rgbInt.b * level/100)
+    }
+    
+    if (( value.size() == 2) && (value.hex) && (value.level)) { //being called from outside of device (App) with only hex and level
+		def rgbInt = hexToRgb(value.hex)
+        sendEvent(name: "level", value: value.level)
+        value.rh = hex(rgbInt.r * value.level/100)
+        value.gh = hex(rgbInt.g * value.level/100)
+        value.bh = hex(rgbInt.b * value.level/100)
+    }
+    
+    if (( value.size() == 1) && (value.colorName)) { //being called from outside of device (App) with only color name
+        def colorData = getColorData(value.colorName)
+        setColor(colorData)
+        return
+    }
+    
+    if (( value.size() == 2) && (value.colorName) && (value.level)) { //being called from outside of device (App) with only color name and level
+		def colorData = getColorData(value.colorName)
+        sendEvent(name: "level", value: value.level)
+        setColor(colorData)
+        return
+    }
+    
+    if (( value.size() == 3) && (value.red != null) && (value.green != null) && (value.blue != null)) { //being called from outside of device (App) with only color values (0-255)
+        def level = device.latestValue("level")
+        value.rh = hex(value.red * level/100)
+        value.gh = hex(value.green * level/100)
+        value.bh = hex(value.blue * level/100)
+        value.hex = "#${value.rh}${value.gh}${value.bh}"
+    }
+
+    if (( value.size() == 4) && (value.red != null) && (value.green != null) && (value.blue != null) && (value.level)) { //being called from outside of device (App) with only color values (0-255) and level
+        sendEvent(name: "level", value: value.level)
+        value.rh = hex(value.red * value.level/100)
+        value.gh = hex(value.green * value.level/100)
+        value.bh = hex(value.blue * value.level/100)
+        value.hex = "#${hex(value.red)}${hex(value.green)}${hex(value.blue)}"
+    }
+    if (!value.rh && !value.gh && !value.bh) {
+    	def level = device.latestValue("level")
+        value.rh = hex(value.red * level/100)
+        value.gh = hex(value.green * level/100)
+        value.bh = hex(value.blue * level/100)
+    }
+    
+	sendEvent(name: "hue", value: value.hue, displayed: false)
+	sendEvent(name: "saturation", value: value.saturation, displayed: false)
+	sendEvent(name: "color", value: value.hex, displayed: false)
+	if (value.level) {
+		sendEvent(name: "level", value: value.level)
+	}
+	if (value.switch) {
+		sendEvent(name: "switch", value: value.switch)
+	}
+	sendEvent(name: "rl", value: Integer.parseInt(value.rh,16))   
+    sendEvent(name: "gl", value: Integer.parseInt(value.gh,16))   
+    sendEvent(name: "bl", value: Integer.parseInt(value.bh,16))   
+    
+    sendRGB(value.rh, value.gh, value.bh)
 }
 
 def setAdjustedColor(value) {
-	if (value) {
-        log.debug "setAdjustedColor: ${value}"
-        def adjusted = value + [:]
-        adjusted.hue = adjustOutgoingHue(value.hue)
-        // Needed because color picker always sends 100
-        adjusted.level = null 
-        setColor(adjusted)
-    }
-}
+	log.debug "setAdjustedColor: ${value}"
+    
+    toggleTiles("off") //turn off the hard color tiles
 
-def refresh() {
-	log.debug "Executing 'refresh'"
-	parent.poll()
-}
+    def level = device.latestValue("level")
+    value.level = level
 
-def adjustOutgoingHue(percent) {
-	def adjusted = percent
-	if (percent > 31) {
-		if (percent < 63.0) {
-			adjusted = percent + (7 * (percent -30 ) / 32)
-		}
-		else if (percent < 73.0) {
-			adjusted = 69 + (5 * (percent - 62) / 10)
-		}
-		else {
-			adjusted = percent + (2 * (100 - percent) / 28)
-		}
-	}
-	log.info "percent: $percent, adjusted: $adjusted"
-	adjusted
+	def c = hexToRgb(value.hex) 
+	value.rh = hex(c.r * (level/100))
+	value.gh = hex(c.g * (level/100))
+	value.bh = hex(c.b * (level/100))
+    value.hex = "#${value.rh}${value.gh}${value.bh}"
+	
+    setColor(value)  
 }
 
 private hubGet(def apiCommand) {
@@ -232,64 +454,6 @@ private hubGet(def apiCommand) {
 //Parse events into attributes
 def parse(String description) {
 	log.debug "Parsing '${description}'"
-    
-    def map = [:]
-    def retResult = []
-    def descMap = parseDescriptionAsMap(description)
-        
-    //Image
-	if (descMap["bucket"] && descMap["key"]) {
-		putImageInS3(descMap)
-	}
-
-	//Status Polling
-    else if (descMap["headers"] && descMap["body"]) {
-        def body = new String(descMap["body"].decodeBase64())
-        if(hdcamera == "true") {
-            def langs = new XmlSlurper().parseText(body)
-
-            def motionAlarm = "$langs.isEnable"
-            def ledMode = "$langs.mode"
-
-            //Get Motion Alarm Status
-            if(motionAlarm == "0") {
-                log.info("Polled: Alarm Off")
-                sendEvent(name: "alarmStatus", value: "off");
-            }
-            else if(motionAlarm == "1") {
-                log.info("Polled: Alarm On")
-                sendEvent(name: "alarmStatus", value: "on");
-            }
-
-            //Get IR LED Mode
-            if(ledMode == "0") {
-                log.info("Polled: LED Mode Auto")
-                sendEvent(name: "ledStatus", value: "auto")
-            }
-            else if(ledMode == "1") {
-                log.info("Polled: LED Mode Manual")
-                sendEvent(name: "ledStatus", value: "manual")
-            }
-    	}
-        else {
-        	if(body.find("alarm_motion_armed=0")) {
-				log.info("Polled: Alarm Off")
-                sendEvent(name: "alarmStatus", value: "off")
-            }
-        	else if(body.find("alarm_motion_armed=1")) {
-				log.info("Polled: Alarm On")
-                sendEvent(name: "alarmStatus", value: "on")
-            }
-            //The API does not provide a way to poll for LED status on 8xxx series at the moment
-        }
-	}
-}
-
-def parseDescriptionAsMap(description) {
-	description.split(",").inject([:]) { map, param ->
-		def nameAndValue = param.split(":")
-		map += [(nameAndValue[0].trim()):nameAndValue[1].trim()]
-	}
 }
 
 private getHostAddress() {
@@ -306,3 +470,252 @@ private String convertPortToHex(port) {
 	String hexport = port.toString().format( '%04x', port.toInteger() )
     return hexport
 }
+
+// Build random block of 32bit integers
+byte[] buildRandomData(size) {
+  ByteArrayOutputStream out = new ByteArrayOutputStream();    
+  writeInt(out, (int)Math.floor(new Date().getTime() / 1000), 32);
+  for(def i = 0; i < size - 4; i++)
+    out.write((int)(Math.random() * 0xFF));
+  out.flush();
+  return out.toByteArray();
+}
+
+// Write int of varying bit-size (8bit, 16bit, 24bit, 32bit, etc)
+public static void writeInt(ByteArrayOutputStream out, int value, int bits) {
+  for(def i = bits - 8; i >= 0; i-=8) {
+    out.write((byte) (0xFF & (value >> i)));
+  }
+}
+
+// Return hex-string interpretation of byte array
+public static String bytesToHex(byte[] bytes) {
+  final char[] hexArray = "0123456789ABCDEF".toCharArray();
+  char[] hexChars = new char[bytes.length * 2];
+  for ( int j = 0; j < bytes.length; j++ ) {
+    int v = bytes[j] & 0xFF;
+    hexChars[j * 2] = hexArray[v >>> 4];
+    hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+  }
+  return new String(hexChars);
+}
+
+def colorNameToRgb(color) {
+
+	final colors = [
+        [name:"Soft White",	r: 255, g: 241, b: 224	],
+        [name:"Daylight", 	r: 255, g: 255, b: 251	],
+        [name:"Warm White", r: 255, g: 244, b: 229	],
+        
+        [name:"Red", 		r: 255, g: 0,	b: 0	],
+		[name:"Green", 		r: 0, 	g: 255,	b: 0	],
+        [name:"Blue", 		r: 0, 	g: 0,	b: 255	],
+        
+		[name:"Cyan", 		r: 0, 	g: 255,	b: 255	],
+        [name:"Magenta", 	r: 255, g: 0,	b: 33	],       
+        [name:"Orange", 	r: 255, g: 102, b: 0	],
+        
+        [name:"Purple", 	r: 170, g: 0,	b: 255	],
+		[name:"Yellow", 	r: 255, g: 255, b: 0	],
+        [name:"White", 		r: 255, g: 255, b: 255	]
+	]
+    
+    def colorData = [:]    
+    colorData = colors.find { it.name == color }
+    
+    colorData
+}
+
+private hex(value, width=2) {
+	def s = new BigInteger(Math.round(value).toString()).toString(16)
+	while (s.size() < width) {
+		s = "0" + s
+	}
+	s
+}
+
+def hexToRgb(colorHex) {
+	def rrInt = Integer.parseInt(colorHex.substring(1,3),16)
+    def ggInt = Integer.parseInt(colorHex.substring(3,5),16)
+    def bbInt = Integer.parseInt(colorHex.substring(5,7),16)
+    
+    def colorData = [:]
+    colorData = [r: rrInt, g: ggInt, b: bbInt]
+    colorData
+}
+
+def rgbToHex(rgb) {
+    def r = hex(rgb.r)
+    def g = hex(rgb.g)
+    def b = hex(rgb.b)
+    def hexColor = "#${r}${g}${b}"
+    
+    hexColor
+}
+
+/**
+ * Converts an HSL color value to RGB. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes h, s, and l are contained in the set [0, 1] and
+ * returns r, g, and b in the set [0, 255].
+ *
+ * @param h       The hue
+ * @param s       The saturation
+ * @param l       The lightness
+ * @return int array, the RGB representation
+ */
+def hslToRGB(double h, double s, double l){
+    double r, g, b;
+
+    if (s == 0f) {
+        r = g = b = l; // achromatic
+    } else {
+        double q = l < 0.5f ? l * (1 + s) : l + s - l * s;
+        double p = 2 * l - q;
+        r = hueToRgb(p, q, h + 1f/3f);
+        g = hueToRgb(p, q, h);
+        b = hueToRgb(p, q, h - 1f/3f);
+    }
+    int ri = (r * 255)
+    int gi = (g * 255)
+    int bi = (b * 255)
+    def rgb = [:]
+    rgb = [r: ri, g: gi, b: bi]
+    rgb;
+}
+
+/** Helper method that converts hue to rgb */
+def hueToRgb(double p, double q, double t) {
+    if (t < 0f)
+        t += 1f;
+    if (t > 1f)
+        t -= 1f;
+    if (t < 1f/6f)
+        return p + (q - p) * 6f * t;
+    if (t < 1f/2f)
+        return q;
+    if (t < 2f/3f)
+        return p + (q - p) * (2f/3f - t) * 6f;
+    return p;
+}
+
+def rgbToHSL(rgb) {
+	def r = rgb.r / 255
+    def g = rgb.g / 255
+    def b = rgb.b / 255
+    def h = 0
+    def s = 0
+    def l = 0
+    
+    def var_min = [r,g,b].min()
+    def var_max = [r,g,b].max()
+    def del_max = var_max - var_min
+    
+    l = (var_max + var_min) / 2
+    
+    if (del_max == 0) {
+            h = 0
+            s = 0
+    } else {
+    	if (l < 0.5) { s = del_max / (var_max + var_min) } 
+        else { s = del_max / (2 - var_max - var_min) }
+
+        def del_r = (((var_max - r) / 6) + (del_max / 2)) / del_max
+        def del_g = (((var_max - g) / 6) + (del_max / 2)) / del_max
+        def del_b = (((var_max - b) / 6) + (del_max / 2)) / del_max
+
+        if (r == var_max) { h = del_b - del_g } 
+        else if (g == var_max) { h = (1 / 3) + del_r - del_b } 
+        else if (b == var_max) { h = (2 / 3) + del_g - del_r }
+        
+		if (h < 0) { h += 1 }
+        if (h > 1) { h -= 1 }
+	}
+    def hsl = [:]    
+    hsl = [h: h * 100, s: s * 100, l: l]
+    
+    hsl
+}
+
+def getColorData(colorName) {
+	log.debug "getColorData: ${colorName}"
+    
+    def colorRGB = colorNameToRgb(colorName)
+    def colorHex = rgbToHex(colorRGB)
+	def colorHSL = rgbToHSL(colorRGB)
+    def level = device.latestValue("level")
+        
+    def colorData = [:]
+    colorData = [hue: colorHSL.h, 
+    			 saturation: colorHSL.s, 
+                 level: level, 
+                 red: colorRGB.r, 
+                 green: colorRGB.g,
+                 blue: colorRGB.b,
+                 rh: hex(colorRGB.r * (level/100)),
+                 gh: hex(colorRGB.g * (level/100)),
+                 bh: hex(colorRGB.b * (level/100)),
+                 hex: colorHex,
+                 alpha: 1]
+     
+     colorData                 
+}
+
+def doColorButton(colorName) {
+    log.debug "doColorButton: '${colorName}()'"
+
+    if (device.latestValue("switch") == "off") { on() }
+
+    def level = device.latestValue("level")
+
+    toggleTiles(colorName.toLowerCase().replaceAll("\\s",""))
+    
+    def c = getColorData(colorName)
+    setColor(c)
+}
+
+def toggleTiles(color) {
+	state.colorTiles = []
+	if ( !state.colorTiles ) {
+    	state.colorTiles = ["softwhite","daylight","warmwhite","red","green","blue","cyan","magenta","orange","purple","yellow","white"]
+    }
+    
+    def cmds = []
+    
+    state.colorTiles.each({
+    	if ( it == color ) {
+        	log.debug "Turning ${it} on"
+            device.displayName + " was closed"
+            cmds << sendEvent(name: it, value: "on${it}", display: True, descriptionText: "${device.displayName} ${color} is 'ON'", isStateChange: true)
+        } else {
+        	//log.debug "Turning ${it} off"
+        	cmds << sendEvent(name: it, value: "off${it}", displayed: false)
+        }
+    })
+    
+    delayBetween(cmds, 2500)
+}
+
+// rows of buttons
+def softwhite() { doColorButton("Soft White") }
+def daylight()  { doColorButton("Daylight") }
+def warmwhite() { doColorButton("Warm White") }
+
+def red() 		{ doColorButton("Red") }
+def green() 	{ doColorButton("Green") }
+def blue() 		{ doColorButton("Blue") }
+
+def cyan() 		{ doColorButton("Cyan") }
+def magenta()	{ doColorButton("Magenta") }
+def orange() 	{ doColorButton("Orange") }
+
+def purple()	{ doColorButton("Purple") }
+def yellow() 	{ doColorButton("Yellow") }
+def white() 	{ doColorButton("White") }
+
+def fireplace() { doColorButton("Fire Place") }
+def storm() 	{ doColorButton("Storm") }
+def deepfade() 	{ doColorButton("Deep Fade") }
+
+def litefade() 	{ doColorButton("Lite Fade") }
+def police() 	{ doColorButton("Police") }
