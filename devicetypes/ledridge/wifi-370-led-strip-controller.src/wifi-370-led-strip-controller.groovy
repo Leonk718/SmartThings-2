@@ -40,6 +40,12 @@ metadata {
         command "StrobeGreen"
         command "FadeBlue"
         command "StrobeBlue"
+		command "getSwitch"
+		command "getLevel"
+		command "getSpeed"
+		command "getColor"
+		command "getHue"
+		command "getSaturation"
      }
     
      tiles(scale: 2)  {
@@ -205,8 +211,8 @@ metadata {
     preferences {
         input("ip", "string", title:"Controller IP Address", description: "Controller IP Address", defaultValue: "192.168.1.69", required: true, displayDuringSetup: true)
         input("port", "string", title:"Controller Port", description: "Controller Port", defaultValue: 5577 , required: true, displayDuringSetup: true)
-        input("username", "string", title:"Controller Username", description: "Controller Username", defaultValue: admin, required: true, displayDuringSetup: true)
-        input("password", "password", title:"Controller Password", description: "Controller Password", defaultValue: nimda, required: true, displayDuringSetup: true)
+        //input("username", "string", title:"Controller Username", description: "Controller Username", defaultValue: admin, required: true, displayDuringSetup: true)
+        //input("password", "password", title:"Controller Password", description: "Controller Password", defaultValue: nimda, required: true, displayDuringSetup: true)
     }
 }
 
@@ -226,6 +232,60 @@ def parse(description) {
 }
 
 // handle commands
+def getSaturation() {
+	def valueNow = device.latestValue("saturation")
+	if (valueNow == null) { 
+		valueNow = 0
+		sendEvent(name: "saturation", value: valueNow)
+	}
+	valueNow
+}
+
+def getHue() {
+	def valueNow = device.latestValue("hue")
+	if (valueNow == null) { 
+		valueNow = 0
+		sendEvent(name: "hue", value: valueNow)
+	}
+	valueNow
+}
+
+def getColor() {
+	def valueNow = device.latestValue("color")
+	if (valueNow == null) { 
+		valueNow = "#FFFFFF"
+		sendEvent(name: "color", value: valueNow)
+	}
+	valueNow
+}
+
+def getSpeed() {
+	def valueNow = device.latestValue("speed")
+	if (valueNow == null) { 
+		valueNow = 80
+		sendEvent(name: "speed", value: valueNow)
+	}
+	valueNow
+}
+
+def getLevel() {
+	def valueNow = device.latestValue("level")
+	if (valueNow == null) { 
+		valueNow = 100
+		sendEvent(name: "level", value: valueNow)
+	}
+	valueNow
+}
+
+def getSwitch() {
+	def valueNow = device.latestValue("switch")
+	if (valueNow == null) { 
+		valueNow = "off"
+		sendEvent(name: "switch", value: valueNow)
+	}
+	valueNow
+}
+
 def on() {
 	sendEvent(name: "switch", value: "on")
     sendPower(true)
@@ -316,9 +376,9 @@ def setLevel(level) {
 	log.trace "setLevel($level)"
     
 	if (level == 0) { off() }
-	else if (device.latestValue("switch") == "off") { on() }
+	else if (getSwitch() == "off") { on() }
     
-    def colorMap = [hex: device.latestValue("color"), level: level]
+    def colorMap = [hex: getColor(), level: level]
 	setColor(colorMap)
 }
 
@@ -326,7 +386,7 @@ def setRed(level) {
 	log.trace "setRed($level)"
     
     def changed = hex(level)
-    def hex = device.latestValue("color")
+    def hex = getColor()
     def hexColor = hex.take(1) + changed + hex.substring(3)
     
 	def colorMap = [hex: hexColor]
@@ -337,7 +397,7 @@ def setGreen(level) {
 	log.trace "setGreen($level)"
     
     def changed = hex(level)
-    def hex = device.latestValue("color")
+    def hex = getColor()
     def hexColor = hex.take(3) + changed + hex.substring(5)
     
 	def colorMap = [hex: hexColor]
@@ -348,7 +408,7 @@ def setBlue(level) {
 	log.trace "setBlue($level)"
     
     def changed = hex(level)
-    def hex = device.latestValue("color")
+    def hex = getColor()
     def hexColor = hex.take(5) + changed
     
 	def colorMap = [hex: hexColor]
@@ -358,14 +418,14 @@ def setBlue(level) {
 def setSaturation(percent) {
 	log.debug "Executing 'setSaturation'"
 	sendEvent(name: "saturation", value: percent)
-    def colorMap = [hue: device.latestValue("hue") as Integer, saturation: device.latestValue("saturation") as Integer]
+    def colorMap = [hue: getHue() as Integer, saturation: getSaturation() as Integer]
 	setColor(colorMap)
 }
 
 def setHue(percent) {
 	log.debug "Executing 'setHue'"
 	sendEvent(name: "hue", value: percent)
-    def colorMap = [hue: device.latestValue("hue") as Integer, saturation: device.latestValue("saturation") as Integer]
+    def colorMap = [hue: getHue() as Integer, saturation: getSaturation() as Integer]
 	setColor(colorMap)
 }
 
@@ -377,7 +437,7 @@ def setColor(value) {
 
     if (( value.size() == 2) && (value.hue != null) && (value.saturation != null)) { //assuming we're being called from outside of device (App)
     	def rgb = hslToRGB(value.hue, value.saturation, 1.0)
-        def level = device.latestValue("level")
+        def level = getLevel()
         value.hex = rgbToHex(rgb)
         value.rh = hex(rgb.r * level/100)
         value.gh = hex(rgb.g * level/100)
@@ -395,7 +455,7 @@ def setColor(value) {
     
     if (( value.size() == 1) && (value.hex)) { //being called from outside of device (App) with only hex
 		def rgbInt = hexToRgb(value.hex)
-        def level = device.latestValue("level")
+        def level = getLevel()
         value.rh = hex(rgbInt.r * level/100)
         value.gh = hex(rgbInt.g * level/100)
         value.bh = hex(rgbInt.b * level/100)
@@ -423,7 +483,7 @@ def setColor(value) {
     }
     
     if (( value.size() == 3) && (value.red != null) && (value.green != null) && (value.blue != null)) { //being called from outside of device (App) with only color values (0-255)
-        def level = device.latestValue("level")
+        def level = getLevel()
         value.rh = hex(value.red * level/100)
         value.gh = hex(value.green * level/100)
         value.bh = hex(value.blue * level/100)
@@ -438,7 +498,7 @@ def setColor(value) {
         value.hex = "#${hex(value.red)}${hex(value.green)}${hex(value.blue)}"
     }
     if (!value.rh && !value.gh && !value.bh) {
-    	def level = device.latestValue("level")
+    	def level = getLevel()
         value.rh = hex(value.red * level/100)
         value.gh = hex(value.green * level/100)
         value.bh = hex(value.blue * level/100)
@@ -465,7 +525,7 @@ def setAdjustedColor(value) {
     
     toggleTiles("off") //turn off the hard color tiles
 
-    def level = device.latestValue("level")
+    def level = getLevel()
     value.level = level
 
 	def c = hexToRgb(value.hex) 
@@ -697,7 +757,7 @@ def getColorData(colorName) {
     def colorRGB = colorNameToRgb(colorName)
     def colorHex = rgbToHex(colorRGB)
 	def colorHSL = rgbToHSL(colorRGB)
-    def level = device.latestValue("level")
+    def level = getLevel()
         
     def colorData = [:]
     colorData = [hue: colorHSL.h, 
@@ -718,9 +778,9 @@ def getColorData(colorName) {
 def doColorButton(colorName) {
     log.debug "doColorButton: '${colorName}()'"
 
-    if (device.latestValue("switch") == "off") { on() }
+    if (getSwitch() == "off") { on() }
 
-    def level = device.latestValue("level")
+    def level = getLevel()
 
     toggleTiles(colorName.toLowerCase().replaceAll("\\s",""))
     
@@ -773,7 +833,7 @@ def doAnimations(animation) {
     byte[] byteFooter = [0x0F]  // 0x10 byte to be replaced with speed eventually (10=50%, 01=100%, 1c=10%, 06=80%) 
     byte[] commandSpeed= [0x10] 
     
-    def speed = device.latestValue("speed").toInteger()
+    def speed = getSpeed().toInteger()
     
     if (speed > 0) {
     	def var1 = (speed-100)
