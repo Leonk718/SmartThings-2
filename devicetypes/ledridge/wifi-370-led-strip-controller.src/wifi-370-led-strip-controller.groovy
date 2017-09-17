@@ -436,7 +436,7 @@ def setColor(value) {
     	toggleTiles("off")
 
     if (( value.size() == 2) && (value.hue != null) && (value.saturation != null)) { //assuming we're being called from outside of device (App)
-    	def rgb = hslToRGB(value.hue, value.saturation, 1.0)
+    	def rgb = hslToRGB(value.hue, value.saturation, 0.5)
         def level = getLevel()
         value.hex = rgbToHex(rgb)
         value.rh = hex(rgb.r * level/100)
@@ -445,12 +445,21 @@ def setColor(value) {
     }
     
     if ((value.size() == 3) && (value.hue != null) && (value.saturation != null) && (value.level)) { //user passed in a level value too from outside (App)
-    	def rgb = hslToRGB(value.hue, value.saturation, 1.0)
+    	def rgb = hslToRGB(value.hue, value.saturation, 0.5)
         sendEvent(name: "level", value: value.level)
         value.hex = rgbToHex(rgb)
         value.rh = hex(rgb.r * value.level/100)
         value.gh = hex(rgb.g * value.level/100)
         value.bh = hex(rgb.b * value.level/100)       
+    }
+    
+    if (( value.size() == 3) && (value.hue != null) && (value.saturation != null) && (value.hex != null)) { //assuming we're being called from outside of device (App)
+    	def rgb = hslToRGB(value.hue, value.saturation, 0.5)
+        def level = getLevel()
+        value.hex = rgbToHex(rgb)
+        value.rh = hex(rgb.r * level/100)
+        value.gh = hex(rgb.g * level/100)
+        value.bh = hex(rgb.b * level/100)
     }
     
     if (( value.size() == 1) && (value.hex)) { //being called from outside of device (App) with only hex
@@ -680,19 +689,27 @@ def rgbToHex(rgb) {
  */
 def hslToRGB(double h, double s, double l){
     double r, g, b;
+    //log.debug "hsl ${h}, ${s}, ${l}"
+    if (h>1) { h = h/100f }
+    if (s>1) { s = s/100f }
+    if (l>1) { l = l/100f }
+    //log.debug "hsl-adj ${h}, ${s}, ${l}"
 
     if (s == 0f) {
         r = g = b = l; // achromatic
     } else {
         double q = l < 0.5f ? l * (1 + s) : l + s - l * s;
         double p = 2 * l - q;
+        log.debug "pqh ${p}, ${q}, ${h}"
         r = hueToRgb(p, q, h + 1f/3f);
         g = hueToRgb(p, q, h);
         b = hueToRgb(p, q, h - 1f/3f);
     }
+    //log.debug "rgb-first ${r}, ${g}, ${b}"
     int ri = (r * 255)
     int gi = (g * 255)
     int bi = (b * 255)
+    //log.debug "rgb-final ${ri}, ${gi}, ${bi}"
     def rgb = [:]
     rgb = [r: ri, g: gi, b: bi]
     rgb;
@@ -700,6 +717,7 @@ def hslToRGB(double h, double s, double l){
 
 /** Helper method that converts hue to rgb */
 def hueToRgb(double p, double q, double t) {
+	//log.debug "pqt ${p}, ${q}, ${t}"
     if (t < 0f)
         t += 1f;
     if (t > 1f)
