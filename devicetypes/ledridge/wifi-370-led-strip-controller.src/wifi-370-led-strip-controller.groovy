@@ -5,7 +5,7 @@
  *
  */
 metadata {
-	definition (name: "WiFi 370 LED Strip Controller", namespace: "Ph4r", author: "Ph4r") {
+	definition (name: "WiFi 370 LED Strip Controller", namespace: "ledridge", author: "Ph4r") {
 		capability "Switch Level"
 		capability "Actuator"
 		capability "Color Control"
@@ -40,12 +40,8 @@ metadata {
         command "StrobeGreen"
         command "FadeBlue"
         command "StrobeBlue"
-		command "getSwitch"
-		command "getLevel"
-		command "getSpeed"
-		command "getColor"
-		command "getHue"
-		command "getSaturation"
+        command "setCoolWhite"
+        command "setWarmWhite"
      }
     
      tiles(scale: 2)  {
@@ -202,6 +198,19 @@ metadata {
             state "offStrobeBlue", label:"StrobeBlue", action:"StrobeBlue", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "onStrobeBlue", label:"StrobeBlue", action:"StrobeBlue", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
         }
+        controlTile("coolWhiteSliderControl", "device.coolWhite", "slider", height: 1, width: 4, range:"(1..100)", inactiveLabel: false) {
+            state "coolWhite", label:'Cool White', action:"setCoolWhite"
+        }
+        valueTile("coolWhite", "device.coolWhite", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
+            state "coolWhite", label: 'W\n${currentValue}'
+        }
+        controlTile("warmWhiteSliderControl", "device.warmWhite", "slider", height: 1, width: 4, range:"(1..100)", inactiveLabel: false) {
+            state "warmWhite", label:'Warm White', action:"setWarmWhite"
+        }
+        valueTile("warmWhite", "device.warmWhite", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
+            state "warmWhite", label: 'WW\n${currentValue}'
+        }
+        
 
         main(["switch"])
         //details(["switch", "rgbSelector"])
@@ -372,6 +381,40 @@ def sendRGB(redHex, greenHex, blueHex) {
     
 }
 
+def sendWhites(coolWhite, warmWhite) {
+	def hosthex = convertIPtoHex(ip);
+    def porthex = convertPortToHex(port);
+    def target = "$hosthex:$porthex";
+    device.deviceNetworkId = target;
+    
+	byte[] byteHeader = [0x31, 0x00, 0x00, 0x00]
+    byte[] byteFooter = [0x0F, 0x0F]
+    
+    log.debug "${coolWhite}:${warmWhite}"
+    if (!coolWhite && !warmWhite) { return }
+    if (!coolWhite) { coolWhite = "00" }
+    if (!warmWhite) { warmWhite = "00" }
+    
+    String bodyHeader = byteHeader.encodeHex()
+    String bodyFooter = byteFooter.encodeHex()
+    String bodyMain = bodyHeader + coolWhite + warmWhite + bodyFooter
+    
+    def byteMain = bodyMain.decodeHex()
+    def checksum = 0
+    
+    byteMain.each {
+    	checksum += it;
+    }
+    checksum = checksum & 0xFF
+    String checksumHex = Integer.toHexString(checksum)
+    //log.debug "${checksum}:${checksumHex}"
+    
+    String body = bodyMain + checksumHex
+    
+    sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"
+    
+}
+
 def setLevel(level) {
 	log.trace "setLevel($level)"
     
@@ -380,6 +423,18 @@ def setLevel(level) {
     
     def colorMap = [hex: getColor(), level: level]
 	setColor(colorMap)
+}
+
+def setCoolWhite(level) {
+	log.trace "setCoolWhite($level)"
+    
+	sendWhites(level, 0)
+}
+
+def setWarmWhite(level) {
+	log.trace "setWarmWhite($level)"
+    
+	sendWhites(0, level)
 }
 
 def setRed(level) {
@@ -847,8 +902,7 @@ def doAnimations(animation) {
     device.deviceNetworkId = target;
     
 	byte[] byteHeader = [0x61]
-    //byte[] byteFooter = [0x10, 0x0F]  // 0x10 byte to be replaced with speed eventually (10=50%, 01=100%, 1c=10%, 06=80%) 
-    byte[] byteFooter = [0x0F]  // 0x10 byte to be replaced with speed eventually (10=50%, 01=100%, 1c=10%, 06=80%) 
+    byte[] byteFooter = [0x0F]
     byte[] commandSpeed= [0x10] 
     
     def speed = getSpeed().toInteger()
