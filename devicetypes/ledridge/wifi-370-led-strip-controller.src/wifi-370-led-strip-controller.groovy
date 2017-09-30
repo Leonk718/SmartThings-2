@@ -198,19 +198,19 @@ metadata {
             state "offStrobeBlue", label:"StrobeBlue", action:"StrobeBlue", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "onStrobeBlue", label:"StrobeBlue", action:"StrobeBlue", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
         }
-        controlTile("coolWhiteSliderControl", "device.coolWhite", "slider", height: 1, width: 4, range:"(0..255)", inactiveLabel: false) {
-            state "coolWhite", label:'Cool White', action:"setCoolWhite"
-        }
-        valueTile("coolWhite", "device.coolWhite", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
-            state "coolWhite", label: 'W\n${currentValue}'
-        }
         controlTile("warmWhiteSliderControl", "device.warmWhite", "slider", height: 1, width: 4, range:"(0..255)", inactiveLabel: false) {
             state "warmWhite", label:'Warm White', action:"setWarmWhite"
         }
         valueTile("warmWhite", "device.warmWhite", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
             state "warmWhite", label: 'WW\n${currentValue}'
         }
-        
+	controlTile("coolWhiteSliderControl", "device.coolWhite", "slider", height: 1, width: 4, range:"(0..255)", inactiveLabel: false) {
+            state "coolWhite", label:'Cool White', action:"setCoolWhite"
+        }
+        valueTile("coolWhite", "device.coolWhite", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
+            state "coolWhite", label: 'CW\n${currentValue}'
+        }
+               
 
         main(["switch"])
         //details(["switch", "rgbSelector"])
@@ -295,20 +295,20 @@ def getSwitch() {
 	valueNow
 }
 
-def getCoolWhite() {
-	def valueNow = device.latestValue("coolWhite")
-	if (valueNow == null) { 
-		valueNow = 0
-		sendEvent(name: "coolWhite", value: valueNow)
-	}
-	valueNow
-}
-
 def getWarmWhite() {
 	def valueNow = device.latestValue("warmWhite")
 	if (valueNow == null) { 
 		valueNow = 0
 		sendEvent(name: "warmWhite", value: valueNow)
+	}
+	valueNow
+}
+
+def getCoolWhite() {
+	def valueNow = device.latestValue("coolWhite")
+	if (valueNow == null) { 
+		valueNow = 0
+		sendEvent(name: "coolWhite", value: valueNow)
 	}
 	valueNow
 }
@@ -409,14 +409,14 @@ def sendWhites() {
 	byte[] byteHeader = [0x31, 0x00, 0x00, 0x00]
     byte[] byteFooter = [0x0F, 0x0F]
     
-    int coolWhite = getCoolWhite().toInteger()
     int warmWhite = getWarmWhite().toInteger()
+    int coolWhite = getCoolWhite().toInteger()
     def level = getLevel()
-    log.debug "${coolWhite}:${warmWhite}@${level}"
+    log.debug "${warmWhite}:${coolWhite}@${level}"
     
     String bodyHeader = byteHeader.encodeHex()
     String bodyFooter = byteFooter.encodeHex()
-    String bodyMain = bodyHeader + hex(coolWhite * level/100) + hex(warmWhite * level/100) + bodyFooter
+    String bodyMain = bodyHeader + hex(warmWhite * level/100) + hex(coolWhite * level/100) + bodyFooter
     
     def byteMain = bodyMain.decodeHex()
     def checksum = 0
