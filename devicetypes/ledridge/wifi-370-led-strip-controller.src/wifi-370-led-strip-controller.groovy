@@ -198,13 +198,13 @@ metadata {
             state "offStrobeBlue", label:"StrobeBlue", action:"StrobeBlue", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "onStrobeBlue", label:"StrobeBlue", action:"StrobeBlue", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
         }
-        controlTile("coolWhiteSliderControl", "device.coolWhite", "slider", height: 1, width: 4, range:"(1..100)", inactiveLabel: false) {
+        controlTile("coolWhiteSliderControl", "device.coolWhite", "slider", height: 1, width: 4, range:"(0..255)", inactiveLabel: false) {
             state "coolWhite", label:'Cool White', action:"setCoolWhite"
         }
         valueTile("coolWhite", "device.coolWhite", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
             state "coolWhite", label: 'W\n${currentValue}'
         }
-        controlTile("warmWhiteSliderControl", "device.warmWhite", "slider", height: 1, width: 4, range:"(1..100)", inactiveLabel: false) {
+        controlTile("warmWhiteSliderControl", "device.warmWhite", "slider", height: 1, width: 4, range:"(0..255)", inactiveLabel: false) {
             state "warmWhite", label:'Warm White', action:"setWarmWhite"
         }
         valueTile("warmWhite", "device.warmWhite", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
@@ -295,6 +295,24 @@ def getSwitch() {
 	valueNow
 }
 
+def getCoolWhite() {
+	def valueNow = device.latestValue("coolWhite")
+	if (valueNow == null) { 
+		valueNow = 0
+		sendEvent(name: "coolWhite", value: valueNow)
+	}
+	valueNow
+}
+
+def getWarmWhite() {
+	def valueNow = device.latestValue("warmWhite")
+	if (valueNow == null) { 
+		valueNow = 0
+		sendEvent(name: "warmWhite", value: valueNow)
+	}
+	valueNow
+}
+
 def on() {
 	sendEvent(name: "switch", value: "on")
     sendPower(true)
@@ -379,9 +397,10 @@ def sendRGB(redHex, greenHex, blueHex) {
     
     sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"
     
+    sendWhites()    
 }
 
-def sendWhites(coolWhite, warmWhite) {
+def sendWhites() {
 	def hosthex = convertIPtoHex(ip);
     def porthex = convertPortToHex(port);
     def target = "$hosthex:$porthex";
@@ -390,14 +409,14 @@ def sendWhites(coolWhite, warmWhite) {
 	byte[] byteHeader = [0x31, 0x00, 0x00, 0x00]
     byte[] byteFooter = [0x0F, 0x0F]
     
-    log.debug "${coolWhite}:${warmWhite}"
-    if (!coolWhite && !warmWhite) { return }
-    if (!coolWhite) { coolWhite = "00" }
-    if (!warmWhite) { warmWhite = "00" }
+    int coolWhite = getCoolWhite().toInteger()
+    int warmWhite = getWarmWhite().toInteger()
+    def level = getLevel()
+    log.debug "${coolWhite}:${warmWhite}@${level}"
     
     String bodyHeader = byteHeader.encodeHex()
     String bodyFooter = byteFooter.encodeHex()
-    String bodyMain = bodyHeader + coolWhite + warmWhite + bodyFooter
+    String bodyMain = bodyHeader + hex(coolWhite * level/100) + hex(warmWhite * level/100) + bodyFooter
     
     def byteMain = bodyMain.decodeHex()
     def checksum = 0
@@ -427,14 +446,16 @@ def setLevel(level) {
 
 def setCoolWhite(level) {
 	log.trace "setCoolWhite($level)"
-    
-	sendWhites(level, 0)
+       
+    sendEvent(name: "coolWhite", value: level)
+	sendWhites()
 }
 
 def setWarmWhite(level) {
 	log.trace "setWarmWhite($level)"
-    
-	sendWhites(0, level)
+       
+    sendEvent(name: "warmWhite", value: level)
+	sendWhites()
 }
 
 def setRed(level) {
