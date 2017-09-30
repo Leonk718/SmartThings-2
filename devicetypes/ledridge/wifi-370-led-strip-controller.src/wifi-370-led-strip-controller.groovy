@@ -27,6 +27,7 @@ metadata {
         command "magenta"
         command "orange"
         command "purple"
+        command "black"
         command "yellow"
         command "white"
         command "setWhiteLevel"
@@ -128,10 +129,16 @@ metadata {
             state "offwarmwhite", label:"warm white", action:"warmwhite", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "onwarmwhite", label:"warm white", action:"warmwhite", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFF4E5"
         }
+        standardTile("black", "device.black", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offblack", label:"black", action:"black", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onblack", label:"black", action:"black", icon:"st.illuminance.illuminance.bright", backgroundColor:"#000000"
+        }
+        /*
         standardTile("yellow", "device.yellow", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
             state "offyellow", label:"yellow", action:"yellow", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "onyellow", label:"yellow", action:"yellow", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFF00"
         }
+        */
         standardTile("magenta", "device.magenta", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
             state "offmagenta", label:"magenta", action:"magenta", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "onmagenta", label:"magenta", action:"magenta", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FF00FF"
@@ -295,6 +302,33 @@ def getSwitch() {
 	valueNow
 }
 
+def getRL() {
+	def valueNow = device.latestValue("rl")
+	if (valueNow == null) { 
+		valueNow = 0
+		sendEvent(name: "rl", value: valueNow)
+	}
+	valueNow
+}
+
+def getGL() {
+	def valueNow = device.latestValue("gl")
+	if (valueNow == null) { 
+		valueNow = 0
+		sendEvent(name: "gl", value: valueNow)
+	}
+	valueNow
+}
+
+def getBL() {
+	def valueNow = device.latestValue("bl")
+	if (valueNow == null) { 
+		valueNow = 0
+		sendEvent(name: "bl", value: valueNow)
+	}
+	valueNow
+}
+
 def getWarmWhite() {
 	def valueNow = device.latestValue("warmWhite")
 	if (valueNow == null) { 
@@ -364,24 +398,26 @@ def sendPower(state) {
     
 }
 
-def sendRGB(redHex, greenHex, blueHex) {
+def sendRGB() {
 	def hosthex = convertIPtoHex(ip);
     def porthex = convertPortToHex(port);
     def target = "$hosthex:$porthex";
     device.deviceNetworkId = target;
     
 	byte[] byteHeader = [0x31]
-    byte[] byteFooter = [0x00, 0x00, 0xF0, 0x0F]
+    byte[] byteFooter = [0x00, 0x0F]  // First byte is a filter 0F passes RGB, F0 passes WW/CW, 00 passes all
     
-    log.debug "${redHex}:${greenHex}:${blueHex}"
-    if (!redHex && !greenHex && !blueHex) { return }
-    if (!redHex) { redHex = "00" }
-    if (!greenHex) { greenHex = "00" }
-    if (!blueHex) { blueHex = "00" }
+    int RL = getRL().toInteger()
+    int GL = getGL().toInteger()
+    int BL = getBL().toInteger()
+    int warmWhite = getWarmWhite().toInteger()
+    int coolWhite = getCoolWhite().toInteger()
+    def level = getLevel()
+    log.debug "${redHex}:${greenHex}:${blueHex}::${warmWhite}:${coolWhite}@${level}"
     
     String bodyHeader = byteHeader.encodeHex()
     String bodyFooter = byteFooter.encodeHex()
-    String bodyMain = bodyHeader + redHex + greenHex + blueHex + bodyFooter
+    String bodyMain = bodyHeader + hex(RL) + hex(GL) + hex(BL) + hex(warmWhite * level/100) + hex(coolWhite * level/100) + bodyFooter
     
     def byteMain = bodyMain.decodeHex()
     def checksum = 0
@@ -397,10 +433,10 @@ def sendRGB(redHex, greenHex, blueHex) {
     
     sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"
     
-    sendWhites()    
+    //sendWhites()    
 }
 
-def sendWhites() {
+def sendWhites() {  // Need to maintain this, so that whites can be changed while an animation is running
 	def hosthex = convertIPtoHex(ip);
     def porthex = convertPortToHex(port);
     def target = "$hosthex:$porthex";
@@ -602,7 +638,7 @@ def setColor(value) {
     sendEvent(name: "gl", value: Integer.parseInt(value.gh,16))   
     sendEvent(name: "bl", value: Integer.parseInt(value.bh,16))   
     
-    sendRGB(value.rh, value.gh, value.bh)
+    sendRGB()
 }
 
 def setAdjustedColor(value) {
@@ -716,6 +752,7 @@ def colorNameToRgb(color) {
         
         [name:"Purple", 	r: 170, g: 0,	b: 255	],
 		[name:"Yellow", 	r: 255, g: 255, b: 0	],
+		[name:"Black", 		r: 0, 	g: 0, 	b: 0	],
         [name:"White", 		r: 255, g: 255, b: 255	]
 	]
     
@@ -890,7 +927,7 @@ def doColorButton(colorName) {
 def toggleTiles(color) {
 	state.colorTiles = []
 	if ( !state.colorTiles ) {
-    	state.colorTiles = ["softwhite","daylight","warmwhite","red","green","blue","cyan","magenta","orange","purple","yellow","white","Fade7","Strobe7","Jump7","FadeRed","StrobeRed","FadeGreen","StrobeGreen","FadeBlue","StrobeBlue"]
+    	state.colorTiles = ["softwhite","daylight","warmwhite","red","green","blue","cyan","magenta","orange","purple","yellow","black","white","Fade7","Strobe7","Jump7","FadeRed","StrobeRed","FadeGreen","StrobeGreen","FadeBlue","StrobeBlue"]
     }
     
     def cmds = []
@@ -1001,6 +1038,7 @@ def orange() 	{ doColorButton("Orange") }
 
 def purple()	{ doColorButton("Purple") }
 def yellow() 	{ doColorButton("Yellow") }
+def black() 	{ doColorButton("Black") }
 def white() 	{ doColorButton("White") }
 
 def Fade7() 	{ doColorButton("aFade7") }
