@@ -413,7 +413,7 @@ def sendRGB() {
     int warmWhite = getWarmWhite().toInteger()
     int coolWhite = getCoolWhite().toInteger()
     def level = getLevel()
-    log.debug "${redHex}:${greenHex}:${blueHex}::${warmWhite}:${coolWhite}@${level}"
+    log.debug "${RL}:${GL}:${BL}::${warmWhite}:${coolWhite}@${level}"
     
     String bodyHeader = byteHeader.encodeHex()
     String bodyFooter = byteFooter.encodeHex()
