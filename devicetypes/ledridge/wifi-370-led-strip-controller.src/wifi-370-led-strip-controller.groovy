@@ -557,16 +557,25 @@ def setColor(value) {
     }
     
     if ((value.size() == 3) && (value.hue != null) && (value.saturation != null) && (value.level)) { //user passed in a level value too from outside (App)
-    	def rgb = hslToRGB(value.hue, value.saturation, 0.5)
-        sendEvent(name: "level", value: value.level)
+    	def rgb = hslToRGB(value.hue, value.saturation, value.level)
+        def level = getLevel()
         value.hex = rgbToHex(rgb)
-        value.rh = hex(rgb.r * value.level/100)
-        value.gh = hex(rgb.g * value.level/100)
-        value.bh = hex(rgb.b * value.level/100)       
+        value.rh = hex(rgb.r * level/100)
+        value.gh = hex(rgb.g * level/100)
+        value.bh = hex(rgb.b * level/100)
     }
     
     if (( value.size() == 3) && (value.hue != null) && (value.saturation != null) && (value.hex != null)) { //assuming we're being called from outside of device (App)
     	def rgb = hslToRGB(value.hue, value.saturation, 0.5)
+        def level = getLevel()
+        value.hex = rgbToHex(rgb)
+        value.rh = hex(rgb.r * level/100)
+        value.gh = hex(rgb.g * level/100)
+        value.bh = hex(rgb.b * level/100)
+    }
+    
+    if (( value.size() == 4) && (value.hue != null) && (value.saturation != null) && (value.level) && (value.hex != null)) { //assuming we're being called from outside of device (App AKA-WebCore)
+    	def rgb = hslToRGB(value.hue, value.saturation, value.level)
         def level = getLevel()
         value.hex = rgbToHex(rgb)
         value.rh = hex(rgb.r * level/100)
