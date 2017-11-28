@@ -43,6 +43,9 @@ metadata {
         command "StrobeBlue"
         command "setCoolWhite"
         command "setWarmWhite"
+        command "user1"
+        command "user2"
+        command "user3"
      }
     
      tiles(scale: 2)  {
@@ -217,6 +220,18 @@ metadata {
         valueTile("coolWhite", "device.coolWhite", height: 1, width: 2, inactiveLabel: false, decoration: "flat") {
             state "coolWhite", label: 'CW\n${currentValue}'
         }
+        standardTile("user1", "device.user1", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offuser1", label:"user1", action:"user1", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onuser1", label:"user1", action:"user1", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("user2", "device.user2", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offuser2", label:"user2", action:"user2", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onuser2", label:"user2", action:"user2", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("user3", "device.user3", height: 2, width: 2, inactiveLabel: false, canChangeIcon: false) {
+            state "offuser3", label:"user3", action:"user3", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onuser3", label:"user3", action:"user3", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
                
 
         main(["switch"])
@@ -229,6 +244,13 @@ metadata {
         input("port", "string", title:"Controller Port", description: "Controller Port", defaultValue: 5577 , required: true, displayDuringSetup: true)
         //input("username", "string", title:"Controller Username", description: "Controller Username", defaultValue: admin, required: true, displayDuringSetup: true)
         //input("password", "password", title:"Controller Password", description: "Controller Password", defaultValue: nimda, required: true, displayDuringSetup: true)
+        input(name:"CStyle", type:"enum", title: "Controller Style", options: ["RGBWW", "RGBW", "RGB+WW", "RGB"], description: "Enter Controller Style", defaultValue: "RGBWW" , required: true, displayDuringSetup: true)
+        //input("userPref1", "string", title:"User Button 1 Name", description: "User Button 1 Name" , required: false, displayDuringSetup: false)
+        //input("userPref1C", "string", title:"User Button 1 Color", description: "User Button 1 Color" , required: false, displayDuringSetup: false)
+        //input("userPref2", "string", title:"User Button 2 Name", description: "User Button 2 Name" , required: false, displayDuringSetup: false)
+        //input("userPref2C", "string", title:"User Button 2 Color", description: "User Button 2 Color" , required: false, displayDuringSetup: false)
+        //input("userPref3", "string", title:"User Button 3 Name", description: "User Button 3 Name" , required: false, displayDuringSetup: false)
+        //input("userPref3C", "string", title:"User Button 3 Color", description: "User Button 3 Color" , required: false, displayDuringSetup: false)
     }
 }
 
@@ -405,7 +427,21 @@ def sendRGB() {
     device.deviceNetworkId = target;
     
 	byte[] byteHeader = [0x31]
-    byte[] byteFooter = [0x00, 0x0F]  // First byte is a filter 0F passes RGB, F0 passes WW/CW, 00 passes all
+    byte[] byteFooter = [0x0F]
+    
+    if (CStyle == "RGB")
+    {
+        byteFooter = [0x0F]
+    }
+    else if (CStyle == "RGB+WW")
+    {
+    	byteFooter = [0xF0, 0x0F]  // First byte is a filter F0 passes RGB, 0F passes WW/CW
+        sendWhites() 
+    }
+    else // (CStyle == "RGBWW") || (CStyle == "RGBW")
+    {
+    	byteFooter = [0x00, 0x0F]  // First byte is a filter 00 passes all at once
+    }
     
     int RL = getRL().toInteger()
     int GL = getGL().toInteger()
@@ -413,7 +449,7 @@ def sendRGB() {
     int warmWhite = getWarmWhite().toInteger()
     int coolWhite = getCoolWhite().toInteger()
     def level = getLevel()
-    log.debug "${RL}:${GL}:${BL}::${warmWhite}:${coolWhite}@${level}"
+    log.debug "${RL}:${GL}:${BL}::${warmWhite}:${coolWhite}@${level}+${CStyle}"
     
     String bodyHeader = byteHeader.encodeHex()
     String bodyFooter = byteFooter.encodeHex()
@@ -431,9 +467,7 @@ def sendRGB() {
     
     String body = bodyMain + checksumHex
     
-    sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"
-    
-    //sendWhites()    
+    sendHubCommand(new physicalgraph.device.HubAction(body.toString(), physicalgraph.device.Protocol.LAN, getDataValue("mac"))); //"0A0A0A15:15C9"    
 }
 
 def sendWhites() {  // Need to maintain this, so that whites can be changed while an animation is running
@@ -562,7 +596,7 @@ def setColor(value) {
         value.hex = rgbToHex(rgb)
         value.rh = hex(rgb.r * level/100)
         value.gh = hex(rgb.g * level/100)
-        value.bh = hex(rgb.b * level/100)
+        value.bh = hex(rgb.b * level/100)       
     }
     
     if (( value.size() == 3) && (value.hue != null) && (value.saturation != null) && (value.hex != null)) { //assuming we're being called from outside of device (App)
@@ -575,15 +609,15 @@ def setColor(value) {
     }
     
     if (( value.size() == 4) && (value.hue != null) && (value.saturation != null) && (value.level) && (value.hex != null)) { //assuming we're being called from outside of device (App AKA-WebCore)
-    	def rgb = hslToRGB(value.hue, value.saturation, value.level)
-        def level = getLevel()
-        value.hex = rgbToHex(rgb)
-        value.rh = hex(rgb.r * level/100)
-        value.gh = hex(rgb.g * level/100)
-        value.bh = hex(rgb.b * level/100)
-    }
-    
-    if (( value.size() == 1) && (value.hex)) { //being called from outside of device (App) with only hex
+     	def rgb = hslToRGB(value.hue, value.saturation, value.level)
+         def level = getLevel()
+         value.hex = rgbToHex(rgb)
+         value.rh = hex(rgb.r * level/100)
+         value.gh = hex(rgb.g * level/100)
+         value.bh = hex(rgb.b * level/100)
+     }
+     
+     if (( value.size() == 1) && (value.hex)) { //being called from outside of device (App) with only hex
 		def rgbInt = hexToRgb(value.hex)
         def level = getLevel()
         value.rh = hex(rgbInt.r * level/100)
@@ -933,10 +967,28 @@ def doColorButton(colorName) {
     }
 }
 
+def doUserButton(UserNumber) {
+    log.debug "doUserButton: '${UserNumber}()'"
+
+    if (getSwitch() == "off") { on() }
+
+    int warmWhite = getWarmWhite().toInteger()
+    int coolWhite = getCoolWhite().toInteger()
+    def level = getLevel()
+    
+    sendEvent(name: "warmWhite", value: warmWhite)
+	sendEvent(name: "coolWhite", value: coolWhite)
+    
+    toggleTiles(UserNumber.toLowerCase().replaceAll("\\s",""))
+    
+    def c = getColorData(UserNumber)
+    setColor(c)
+}
+
 def toggleTiles(color) {
 	state.colorTiles = []
 	if ( !state.colorTiles ) {
-    	state.colorTiles = ["softwhite","daylight","warmwhite","red","green","blue","cyan","magenta","orange","purple","yellow","black","white","Fade7","Strobe7","Jump7","FadeRed","StrobeRed","FadeGreen","StrobeGreen","FadeBlue","StrobeBlue"]
+    	state.colorTiles = ["softwhite","daylight","warmwhite","red","green","blue","cyan","magenta","orange","purple","yellow","black","white","Fade7","Strobe7","Jump7","FadeRed","StrobeRed","FadeGreen","StrobeGreen","FadeBlue","StrobeBlue","user1","user2","user3"]
     }
     
     def cmds = []
@@ -1065,3 +1117,7 @@ def StrobeBlue() 	{ doColorButton("aStrobeBlue") }
 
 def FadeWhite() 	{ doColorButton("aFadeWhite") }
 def StrobeWhite() 	{ doColorButton("aStrobeWhite") }
+
+def user1()		{ doUserButton("White") }
+def user2()		{ doUserButton("White") }
+def user3()		{ doUserButton("White") }
